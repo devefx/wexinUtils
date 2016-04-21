@@ -1,6 +1,9 @@
 package org.devefx.wx.common.util;
 
-import java.math.BigInteger;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -47,7 +50,7 @@ public abstract class CommonUtils {
 		try {
 			digest = MessageDigest.getInstance("sha1");
 			digest.update(text.getBytes());
-			return new BigInteger(1, digest.digest()).toString(16);
+			return bytesToHex(digest.digest());
 		} catch (Exception e) {
 		}
 		return text;
@@ -62,10 +65,26 @@ public abstract class CommonUtils {
 		try {
 			digest = MessageDigest.getInstance("md5");
 			digest.update(text.getBytes());
-			return new BigInteger(1, digest.digest()).toString(16);
+			return bytesToHex(digest.digest());
 		} catch (Exception e) {
 		}
 		return text;
+	}
+	/**
+	 * 字节数组转16进制
+	 * @param bytes
+	 * @return String
+	 */
+	public static String bytesToHex(byte[] bytes) {
+		final String HEX = "0123456789abcdef";
+		StringBuilder buff = new StringBuilder(bytes.length * 2);
+		for (byte b : bytes) {
+			// 取出这个字节的高4位，然后与0x0f与运算，得到一个0-15之间的数据，通过HEX.charAt(0-15)即为16进制数
+			buff.append(HEX.charAt((b >> 4) & 0x0f));
+			// 取出这个字节的低位，与0x0f与运算，得到一个0-15之间的数据，通过HEX.charAt(0-15)即为16进制数
+			buff.append(HEX.charAt(b & 0x0f));
+		}
+		return buff.toString();
 	}
 	/**
 	 * 将字符串第一个字母转换成小写
@@ -112,5 +131,29 @@ public abstract class CommonUtils {
 			buf.append(base.charAt(number));
 		}
 		return buf.toString();
+	}
+	/**
+	 * 将流写到文件
+	 * @param is 要写出的流
+	 * @return 文件
+	 * @throws IOException
+	 */
+	public static File outFile(InputStream is, String filename) throws IOException {
+		String dir = System.getProperty("java.io.tmpdir");
+		int len;
+		byte[] buf = new byte[1024];
+		FileOutputStream fileOutputStream = null;
+		try {
+			fileOutputStream = new FileOutputStream(dir + filename);
+			while ((len = is.read(buf)) > 0) {
+				fileOutputStream.write(buf, 0, len);
+			}
+		} finally {
+			if (fileOutputStream != null) {
+				fileOutputStream.flush();
+				fileOutputStream.close();
+			}
+		}
+		return new File(dir + filename);
 	}
 }

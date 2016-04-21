@@ -1,11 +1,12 @@
 package org.devefx.wx.common.pay.util;
 
-import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.devefx.wx.common.util.CommonUtils;
 
 /**
  * 微信支付参数签名
@@ -84,11 +85,7 @@ public class SignPart {
 			try {
 				digest = MessageDigest.getInstance(algorithm);
 				digest.update(toString().getBytes("utf-8"));
-				String result = new BigInteger(1, digest.digest()).toString(16);
-				for (int i = result.length(); i < 32; i++) {
-					result = "0" + result;
-				}
-				return result.toUpperCase();
+				return CommonUtils.bytesToHex(digest.digest()).toUpperCase();
 			} catch (Exception e) {
 			}
 		}
@@ -99,11 +96,14 @@ public class SignPart {
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 		for (String value : set) {
-			buf.append(value);
 			buf.append("&");
+			buf.append(value);
 		}
-		buf.append("key=");
-		buf.append(key);
+		buf.deleteCharAt(0);
+		if (key != null) {
+			buf.append("&key=");
+			buf.append(key);
+		}
 		return buf.toString();
 	}
 }
